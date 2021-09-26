@@ -1,5 +1,6 @@
 /*
  *   gnudiscriminant - a linear discriminant analysis tool
+ *	 Copyright (C) Alexander Frotscher
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -43,14 +44,14 @@ typedef enum
 	true
 } bool;
 
-int ripleyLDA( char *, char *);
-int YuLDA( char *,  char *);
+int ripleyLDA( char *, char *,double);
+int YuLDA( char *,  char *,double);
 
 gsl_matrix *loadTrainingData(char *, size_t **, size_t *, double **);
 gsl_matrix_view *makeClasses(gsl_matrix *, size_t **, size_t *);
 gsl_matrix *calcGroupMeans(gsl_matrix *, gsl_matrix_view *, size_t *);
 gsl_matrix* getPrincipalComponents(gsl_matrix*, gsl_vector*, bool*);
-gsl_vector *getRank(gsl_vector *, size_t *,double*);
+gsl_vector *getRank(gsl_vector *, size_t *,double);
 gsl_matrix *truncatePC(gsl_matrix *, size_t *, bool *);
 gsl_vector *scaleSingular(gsl_vector *, size_t, size_t *);
 gsl_vector *scaleSingular2(gsl_vector *, size_t *);
@@ -67,6 +68,6 @@ gsl_matrix *scaling(gsl_matrix *, gsl_vector *, gsl_vector *);
 gsl_matrix *calcRipleyLDA(gsl_matrix *, gsl_matrix *);
 
 //methods for yu-version
-gsl_matrix *calcAMatrix(gsl_matrix *, gsl_vector *);
+gsl_matrix *calcGammaMatrix(gsl_matrix *, gsl_vector *);
 gsl_vector *calcUpsilon(gsl_matrix *, gsl_vector *);
 gsl_matrix *calcYuLDA(gsl_matrix *, gsl_matrix *, gsl_vector *);

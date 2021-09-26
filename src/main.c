@@ -1,5 +1,6 @@
 /*
  *   gnudiscriminant - a linear discriminant analysis tool
+ * 	 Copyright (C) Alexander Frotscher
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -31,6 +32,7 @@
 
 int main(int argc, char *argv[])
 {
+	double threshold=pow(10,-4);
 	if (argc<4){
 		printf("Usage: -r  <Path to trainingdata> <Path to validationset> | -l <Path to trainingdata> <Path to validationset>\n");
 	}
@@ -53,7 +55,7 @@ int main(int argc, char *argv[])
 				rflag++;
 				lflag++;
 			}
-			ripleyLDA(argv[2], argv[3]);
+			ripleyLDA(argv[2], argv[3],threshold);
 			break;
 		case 'l':
 			if (lflag)
@@ -67,7 +69,7 @@ int main(int argc, char *argv[])
 				rflag++;
 				lflag++;
 			}
-			YuLDA(argv[2], argv[3]);
+			YuLDA(argv[2], argv[3],threshold);
 			break;
 		default:
 			printf("Usage: -r  -t <Path to trainingdata> -v <Path to validationset> | -l -t <Path to trainingdata> -v <Path to validationset>\n");

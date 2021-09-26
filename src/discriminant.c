@@ -1,5 +1,6 @@
 /*
  *   gnudiscriminant - a linear discriminant analysis tool
+ *	 Copyright (C) Alexander Frotscher
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -47,10 +48,9 @@
  * \param *trainingset a pointer to the file containing the trainingset 
  * 
 **********/
-int ripleyLDA(  char *trainingdata,  char *trainingSet)
+int ripleyLDA(  char *trainingdata,  char *trainingSet, double threshold)
 {
 
-	double threshold=pow(10,-4);
 	size_t grow=0;
 	size_t classnumber;
 	size_t* groupsize=NULL;
@@ -102,7 +102,7 @@ int ripleyLDA(  char *trainingdata,  char *trainingSet)
 	gsl_vector *singularvalues = gsl_vector_alloc(mR->size2);
 	gsl_matrix *pc = getPrincipalComponents(mR,singularvalues,ptr);
 	size_t rank = singularvalues->size;
-	gsl_vector *svalues = getRank(singularvalues, &rank,&threshold);
+	gsl_vector *svalues = getRank(singularvalues, &rank, threshold);
 	bool b2=false;
 	bool *ptr2=&b2;
 	gsl_matrix *eigenvec = truncatePC(pc, &rank, ptr2);
@@ -123,7 +123,7 @@ int ripleyLDA(  char *trainingdata,  char *trainingSet)
 	b=true;
 	gsl_matrix *pc2 = getPrincipalComponents(gm,singularvalues2,ptr);
 	rank = singularvalues2->size;
-	gsl_vector *svalues2 = getRank(singularvalues2, &rank,&threshold);
+	gsl_vector *svalues2 = getRank(singularvalues2, &rank, threshold);
 	gsl_matrix *eigenvec2 = truncatePC(pc2, &rank, ptr);
 
 	//If pc is truncated delte the old version
@@ -170,9 +170,8 @@ int ripleyLDA(  char *trainingdata,  char *trainingSet)
  * \param *trainingset a pointer to the file containing the trainingset 
  * 
 **********/
-int YuLDA( char *trainingdata, char *trainingSet)
+int YuLDA( char *trainingdata, char *trainingSet, double threshold)
 {
-	double threshold=pow(10,-4);
 	size_t grow=0;
 	size_t classnumber;
 	size_t* groupsize=NULL;
@@ -214,7 +213,7 @@ int YuLDA( char *trainingdata, char *trainingSet)
 	gsl_matrix *pc = getPrincipalComponents(gm,singularvalues,ptr);
 
 	size_t rank = singularvalues->size;
-	gsl_vector *svalues = getRank(singularvalues, &rank,&threshold);
+	gsl_vector *svalues = getRank(singularvalues, &rank, threshold);
 	gsl_matrix *eigenvec = truncatePC(pc, &rank, ptr);
 
 	//If pc is truncated delte the old version
@@ -225,12 +224,12 @@ int YuLDA( char *trainingdata, char *trainingSet)
 
 	gsl_vector *eigenvalues = scaleSingular2(svalues, &classnumber);
 	gsl_vector_free(svalues);
-	gsl_matrix *a = calcAMatrix(eigenvec, eigenvalues);
+	gsl_matrix *gamma = calcGammaMatrix(eigenvec, eigenvalues);
 	gsl_vector_free(eigenvalues);
 
 	//get eigenvalues and eigenvectors from the within-class covariance matrix in the new space
-	gsl_matrix *c = gsl_matrix_alloc(m->size2, a->size2);
-	gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, m, a, 0.0, c);
+	gsl_matrix *c = gsl_matrix_alloc(m->size2, gamma->size2);
+	gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, m, gamma, 0.0, c);
 	gsl_matrix_free(m);
 	gsl_vector *singularvalues2 = gsl_vector_alloc(c->size2);
 	b=false;
@@ -242,8 +241,8 @@ int YuLDA( char *trainingdata, char *trainingSet)
 
 	//calculate the transformation matrix
 	gsl_vector *upsilon = calcUpsilon(pc2, eigenvalues2);
-	gsl_matrix *lda = calcYuLDA(pc2, a, upsilon);
-	gsl_matrix_free(a);
+	gsl_matrix *lda = calcYuLDA(pc2, gamma, upsilon);
+	gsl_matrix_free(gamma);
 	gsl_matrix_free(pc2);
 
 	//project the data to the new space
@@ -504,9 +503,9 @@ gsl_matrix* getPrincipalComponents(gsl_matrix* m, gsl_vector* singularvalues, bo
  * \return a gsl_vector of the singularvalues up to the desired rank
  * 
 **********/
-gsl_vector *getRank(gsl_vector *singularvalues, size_t *rank, double *threshold)
+gsl_vector *getRank(gsl_vector *singularvalues, size_t *rank, double threshold)
 {
-	while (gsl_vector_get(singularvalues, *rank - 1) < *threshold)
+	while (gsl_vector_get(singularvalues, *rank - 1) < threshold)
 	{
 		(*rank)--;
 	}
@@ -946,15 +945,15 @@ gsl_matrix *calcRipleyLDA(gsl_matrix *pc, gsl_matrix *scale)
 
 /*********
  * 
- * This method calculates the "A" matrix for the YU-LDA
+ * This method calculates the "Gamma" matrix for the YU-LDA
  * 
  * \param *eigenvec a pointer to the matrix containing the eigenvectors of the between-class covariance matrix
  * \param *eigenvalues a pointer to a gsl_vector containing the eigenvalues of the between-class covariance matrix
  * 
- * \return a pointer to the gsl_matrix "A"
+ * \return a pointer to the gsl_matrix "Gamma"
  * 
 **********/
-gsl_matrix *calcAMatrix(gsl_matrix *eigenvec, gsl_vector *eigenvalues)
+gsl_matrix *calcGammaMatrix(gsl_matrix *eigenvec, gsl_vector *eigenvalues)
 {
 	// diagonal matrix multiplication from the right with a vector
 	gsl_vector_view *columnviews = (gsl_vector_view *)malloc(eigenvec->size2 * sizeof(gsl_matrix_column(eigenvec, 0)));
@@ -1029,16 +1028,16 @@ gsl_vector *calcUpsilon(gsl_matrix *v, gsl_vector *eigenvalues)
  * This method calculates the transformation matrix for the YU-version of the LDA
  * 
  * \param *v a pointer to the matrix containing the eigenvectors of the transformed within-class covariance matrix
- * \param *a a pointer to the gsl_matrix "A"
+ * \param *a a pointer to the gsl_matrix "Gamma"
  * \param *upsilon a pointer to the gsl_vector Upsilon
  * 
  * \return a pointer to a gsl_matrix containing the transformation matrix
  * 
 **********/
-gsl_matrix *calcYuLDA(gsl_matrix *v, gsl_matrix *a, gsl_vector *upsilon)
+gsl_matrix *calcYuLDA(gsl_matrix *v, gsl_matrix *gamma, gsl_vector *upsilon)
 {
-	gsl_matrix *tmp = gsl_matrix_alloc(v->size2, a->size1);
-	gsl_blas_dgemm(CblasTrans, CblasTrans, 1.0, v, a, 0.0, tmp);
+	gsl_matrix *tmp = gsl_matrix_alloc(v->size2, gamma->size1);
+	gsl_blas_dgemm(CblasTrans, CblasTrans, 1.0, v, gamma, 0.0, tmp);
 
 	// diagonal matrix multiplication from the left with a vector
 	gsl_vector_view *rowviews = (gsl_vector_view *)malloc(tmp->size1 * sizeof(gsl_matrix_row(tmp, 0)));
