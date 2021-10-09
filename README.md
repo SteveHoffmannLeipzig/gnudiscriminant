@@ -9,8 +9,8 @@ This program is a scientific library using the GSL and is build for calculating 
 - use make in the “gnudiscriminant” directory to build the executable main file
 - navigate to the bin directory
 - use one of the follwoing bash commands
-  ./main -l codtestwithlabel.mat codtest.mat
-  ./main -r codtestwithlabel.mat codtest.mat
+- ./main -l codtestwithlabel.mat codtest.mat
+- ./main -r codtestwithlabel.mat codtest.mat
 
 The solution to the LDA can be found in two files. The classification can be found in the “class.txt” file. The probabilities for each sample to be in one of the classes can be found in “posterior.txt”. Make sure to save the desired file in a different place since the two output files will be overwritten by using the program.
 
