@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 		case 'r':
 			if (rflag)
 			{
-				printf("Use only one algorithm\n");
+				printf("Use only one algorithm.\n");
 				exit(EXIT_SUCCESS);
 				break;
 			}
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 		case 'l':
 			if (lflag)
 			{
-				printf("Use only one algorithm\n");
+				printf("Use only one algorithm.\n");
 				exit(EXIT_SUCCESS);
 				break;
 			}
