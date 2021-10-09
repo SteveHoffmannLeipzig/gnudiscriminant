@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 {
 	double threshold=pow(10,-4);
 	if (argc<4){
-		printf("Usage: -r  <Path to trainingdata> <Path to validationset> | -l <Path to trainingdata> <Path to validationset>\n");
+		printf("Usage: -r  <Path to training data set> <Path to validation data set> | -l <Path to training data set> <Path to validation data set>\nUse either the -r flag or the -l flag. The files for the datasets have to be tab-separated files and the columns have to represent the samples.\nThe training data set needs to contain the labels as numeric values in the first row. The number of features for both datasets has to be equal.\n");
 	}
 	int option;
 	int rflag = 0;
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 			YuLDA(argv[2], argv[3],threshold);
 			break;
 		default:
-			printf("Usage: -r  -t <Path to trainingdata> -v <Path to validationset> | -l -t <Path to trainingdata> -v <Path to validationset>\n");
+			printf("Usage: -r  <Path to training data set> <Path to validation data set> | -l <Path to training data set> <Path to validation data set>\nUse either the -r flag or the -l flag. The files for the datasets have to be tab-separated files and the columns have to represent the samples.\nThe training data set needs to contain the labels as numeric values in the first row. The number of features for both datasets has to be equal.\n");
 		}
 	}
 }
