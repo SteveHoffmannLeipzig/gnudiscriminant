@@ -8,7 +8,7 @@ This program is a scientific library using the GSL and is build for calculating 
 - clone the repository of “gnudiscriminant”
 - use make in the “gnudiscriminant” directory to build the executable main file
 - navigate to the bin directory
-- use one of the follwoing bash commands
+- use one of the following bash commands
 - ./main -l codtestwithlabel.mat codtest.mat
 - ./main -r codtestwithlabel.mat codtest.mat
 
