@@ -416,29 +416,51 @@ gsl_matrix* gnupca_readmatrix_groups(char *in, size_t grow, size_t ***groups, si
     }
   }
 
-  if(0) {
-  //dump group info
-  for(k=0; k < ng; k++) {
-    fprintf(stderr, "group %lu w/ %lu data points\n", Gnum[k], Gsze[k]);
-    for(j=0; j < Gsze[k]; j++) {
-      fprintf(stderr, "member of group %lu : %lu\n", Gnum[k], Gmem[k][j]);
-    }
-  }
+  if(1) {
+      //dump group info
+      for(k=0; k < ng; k++) {
+          fprintf(stderr, "group %lu w/ %lu data points\n", Gnum[k], Gsze[k]);
+          for(j=0; j < Gsze[k]; j++) {
+              fprintf(stderr, "member of group %lu : %lu\n", Gnum[k], 
+                      Gmem[k][j]);
+          }
+      }
   }
 
   //gnupca_writematrix(stdout, NULL, "Train", ',', Train, 0);
 
 
-  //removing group information
-    A = gsl_matrix_calloc(M->size1-1, M->size2);
-    for(i=1; i < M->size1; i++) {
-      for(j=0; j < M->size2; j++) {
-        gsl_matrix_set(A, i-1, j, gsl_matrix_get(M, i, j));
+  size_t c, colcnt;
+  //removing group information and reordering
+  //the samples according to groups
+  A = gsl_matrix_calloc(M->size1-1, M->size2);
+  for(i=1; i < M->size1; i++) {
+      colcnt = 0;
+      for(k=0; k < ng; k++) {
+          for(c=0; c < Gsze[k]; c++) { 
+              gsl_matrix_set(A, i-1, colcnt, gsl_matrix_get(M, i, 
+                          Gmem[k][c]));
+              //update columns when last row is selected
+              if(i+1 == M->size1) {
+                  Gmem[k][c]= colcnt;
+              }
+              colcnt++;
+          }
       }
-    }
+  }
 
   //gnupca_writematrix(stdout, NULL, "A", ',', A, 0);
  
+  if(1) {
+      //dump group info
+      for(k=0; k < ng; k++) {
+          fprintf(stderr, "group %lu w/ %lu data points\n", Gnum[k], Gsze[k]);
+          for(j=0; j < Gsze[k]; j++) {
+              fprintf(stderr, "member of group %lu : %lu\n", Gnum[k], 
+                      Gmem[k][j]);
+          }
+      }
+  }
  
   *groups=Gmem;
   *groupsize = Gsze;

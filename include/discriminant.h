@@ -48,7 +48,7 @@ int ripleyLDA( char *, char *,double);
 int YuLDA( char *,  char *,double);
 
 gsl_matrix *loadTrainingData(char *, size_t **, size_t *, double **);
-gsl_matrix_view *makeClasses(gsl_matrix *, size_t **, size_t *);
+gsl_matrix_view *makeClasses(gsl_matrix *, size_t ***, size_t **, size_t *);
 gsl_matrix *calcGroupMeans(gsl_matrix *, gsl_matrix_view *, size_t *);
 gsl_matrix* getPrincipalComponents(gsl_matrix*, gsl_vector*, bool*);
 gsl_vector *getRank(gsl_vector *, size_t *,double);

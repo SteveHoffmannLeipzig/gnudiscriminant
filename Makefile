@@ -1,5 +1,5 @@
 CXX       := gcc
-CXX_FLAGS := -o -g -I/usr/local/zlib/include/ -I/usr/include/
+CXX_FLAGS := -g -I/usr/local/zlib/include/ -I/usr/include/
 
 BIN     := bin
 SRC     := src

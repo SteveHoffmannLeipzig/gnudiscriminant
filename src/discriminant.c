@@ -53,13 +53,20 @@ int ripleyLDA(  char *trainingdata,  char *trainingSet, double threshold)
 {
 
 	size_t grow=0;
-	size_t classnumber;
+	size_t classnumber, k;
 	size_t* groupsize=NULL;
 	size_t **groups = NULL;
 	
 	gsl_matrix* m =gnupca_readmatrix_groups(trainingdata,grow,&groups,&classnumber,&groupsize);
 	double prior = (double)(*groupsize)/(double)m->size2;
-	gsl_matrix_view *classes = makeClasses(m, &groupsize, &classnumber);
+	gsl_matrix_view *classes = makeClasses(m, &groups, &groupsize, &classnumber);
+
+    for(k=0; k < classnumber; k++) {
+        free(groups[k]);
+    }
+    free(groups);
+    free(groupsize);
+
 	gsl_matrix *groupmeans = calcGroupMeans(m, classes, &classnumber);
 
 	gsl_vector_view *vectorviews = (gsl_vector_view *)malloc(classnumber * sizeof(gsl_matrix_column(groupmeans, 0)));
@@ -116,6 +123,7 @@ int ripleyLDA(  char *trainingdata,  char *trainingSet, double threshold)
 
 	//scale the eigenvectors
 	gsl_matrix *scale = scaling(eigenvec, diaM, svalues);
+    gsl_vector_free(svalues);
 
 	//get eigenvectors of between-class covariance matrix
 	gsl_matrix *gm = gsl_matrix_alloc(scale->size2, groupmeans->size2);
@@ -125,7 +133,9 @@ int ripleyLDA(  char *trainingdata,  char *trainingSet, double threshold)
 	gsl_matrix *pc2 = getPrincipalComponents(gm,singularvalues2,ptr);
 	rank = singularvalues2->size;
 	gsl_vector *svalues2 = getRank(singularvalues2, &rank, threshold);
-	gsl_matrix *eigenvec2 = truncatePC(pc2, &rank, ptr);
+	gsl_vector_free(svalues2);
+
+    gsl_matrix *eigenvec2 = truncatePC(pc2, &rank, ptr);
 
 	//If pc is truncated delte the old version
 	if (b == true)
@@ -173,16 +183,22 @@ int ripleyLDA(  char *trainingdata,  char *trainingSet, double threshold)
 **********/
 int YuLDA( char *trainingdata, char *trainingSet, double threshold)
 {
-	size_t grow=0;
+	size_t grow=0, k;
 	size_t classnumber;
 	size_t* groupsize=NULL;
 	size_t **groups = NULL;
 	
 	gsl_matrix* m =gnupca_readmatrix_groups(trainingdata,grow,&groups,&classnumber,&groupsize);
-	gsl_matrix_view *classes = makeClasses(m, &groupsize, &classnumber);
+	gsl_matrix_view *classes = makeClasses(m, &groups, &groupsize, &classnumber);
 	gsl_matrix *groupmeans = calcGroupMeans(m, classes, &classnumber);
 
-	gsl_vector_view *vectorviews = (gsl_vector_view *)malloc(classnumber * sizeof(gsl_matrix_column(groupmeans, 0)));
+    for(k=0; k < classnumber; k++) {
+        free(groups[k]);
+    }
+    free(groups);
+    free(groupsize);
+	
+    gsl_vector_view *vectorviews = (gsl_vector_view *)malloc(classnumber * sizeof(gsl_matrix_column(groupmeans, 0)));
 	if (vectorviews == NULL)
 	{
 		fprintf(stderr, "memory could not be given free\n");
@@ -421,19 +437,19 @@ gsl_matrix *loadTrainingData(char *trainingdata, size_t **classsize, size_t *cla
  * \return a matrix view of the classes
  * 
 **********/
-gsl_matrix_view *makeClasses(gsl_matrix *m, size_t **classsize, size_t *classnumber)
+gsl_matrix_view *makeClasses(gsl_matrix *m, size_t ***classes, size_t **classsize, size_t *classnumber)
 {
-	gsl_matrix_view *classes = (gsl_matrix_view *)malloc(*classnumber * sizeof(gsl_matrix_submatrix(m, 0, 0, m->size1, (*classsize)[0])));
-	if (classes == NULL)
+	gsl_matrix_view *matrices = (gsl_matrix_view *)malloc(*classnumber * sizeof(gsl_matrix_submatrix(m, 0, 0, m->size1, (*classsize)[0])));
+	if (matrices == NULL)
 	{
 		fprintf(stderr, "memory could not be given free\n");
 		exit(EXIT_FAILURE);
 	}
 	for (size_t i = 0; i < *classnumber; i++)
 	{
-		classes[i] = gsl_matrix_submatrix(m, 0, (*classsize)[i] * i, m->size1, (*classsize)[i]);
+		matrices[i] = gsl_matrix_submatrix(m, 0, (*classes)[i][0], m->size1, (*classsize)[i]);
 	}
-	return classes;
+	return matrices;
 }
 
 /*********
@@ -483,8 +499,11 @@ gsl_matrix* getPrincipalComponents(gsl_matrix* m, gsl_vector* singularvalues, bo
 	gsl_vector* work = gsl_vector_alloc(m->size2);
 	gsl_matrix *v = gsl_matrix_alloc(m->size2, m->size2);
 	gsl_linalg_SV_decomp_mod(m, x, v, singularvalues, work);
+    gsl_vector_free(work);
+    gsl_matrix_free(x);
+
 	if (*b == true) {
-		gsl_matrix_free(v);
+        gsl_matrix_free(v);
 		return m;
 	}
 	else {
@@ -790,9 +809,13 @@ void classification(gsl_matrix *t, gsl_vector_view *vectorviews, size_t *classnu
 				fputc('\n',pData2);
 				index++;
 			}
-		}
+	    
+        
+            gsl_vector_free(tmp);	
+        }
 	}
 	printf("Success.\n");
+    free(result);
 }
 
 double sumofsq(gsl_vector *v)
