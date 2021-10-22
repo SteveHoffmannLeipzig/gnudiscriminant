@@ -22,6 +22,7 @@
  *  
  *
  *  @author Alexander Frotscher, Steve Hoffmann
+ *  @brief discriminant analysis
  *  @institute FLI
  *  
  */
