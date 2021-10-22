@@ -21,7 +21,7 @@
  *  discriminant.c
  *  
  *
- *  @author Alexander Frotscher
+ *  @author Alexander Frotscher, Steve Hoffmann
  *  @institute FLI
  *  
  */
