@@ -44,6 +44,7 @@ typedef enum
 	true
 } bool;
 
+void printLDA(gsl_matrix *);
 int ripleyLDA( char *, char *,double);
 int YuLDA( char *,  char *,double);
 

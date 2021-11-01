@@ -146,7 +146,8 @@ int ripleyLDA(  char *trainingdata,  char *trainingSet, double threshold)
 	gsl_matrix *lda = calcRipleyLDA(eigenvec2,scale);
 
 	//Project to new space
-	gsl_matrix *t = projectTrainingSet(trainingSet, lda);
+	printLDA(lda);
+  gsl_matrix *t = projectTrainingSet(trainingSet, lda);
 	gsl_matrix *pGroupMeans = projectGroupMeans(groupmeans, lda);
 	gsl_matrix_free(lda);
 
@@ -263,7 +264,8 @@ int YuLDA( char *trainingdata, char *trainingSet, double threshold)
 	gsl_matrix_free(pc2);
 
 	//project the data to the new space
-	gsl_matrix *x_star = projectTrainingSet(trainingSet, lda);
+	printLDA(lda);
+  gsl_matrix *x_star = projectTrainingSet(trainingSet, lda);
 	gsl_matrix *pGroupMeans = projectGroupMeans(groupmeans, lda);
 	gsl_matrix_free(lda);
 
@@ -737,6 +739,10 @@ gsl_matrix *projectTrainingSet( char *trainingSet, gsl_matrix *lda)
 	gsl_matrix_transpose_memcpy(mp, tmp);
 	gsl_matrix_free(tmp);
 	return mp;
+}
+
+void printLDA(gsl_matrix *lda) {
+  fprintf(stderr, "lda of dimensions [%d,%d]\n", lda->size1, lda->size2);
 }
 
 /*********
