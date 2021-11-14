@@ -742,7 +742,29 @@ gsl_matrix *projectTrainingSet( char *trainingSet, gsl_matrix *lda)
 }
 
 void printLDA(gsl_matrix *lda) {
+  size_t i, j;
+  FILE *dev;
+
+	if ((dev = fopen("lda.txt", "w+")) == NULL) {
+		fprintf(stderr, "cannot open result file \n");
+		exit(EXIT_FAILURE);
+	}
+
+
   fprintf(stderr, "lda of dimensions [%d,%d]\n", lda->size1, lda->size2);
+
+
+  for(i=0; i < lda->size1; i++) {
+    for(j=0; j < lda->size2; j++) {
+      if(j>0) {
+        fprintf(dev, "\t");
+      }
+      fprintf(dev, "%f", gsl_matrix_get(lda, i, j));
+    }
+    fprintf(dev, "\n");
+  }
+
+  fclose(dev);
 }
 
 /*********
