@@ -18,10 +18,11 @@
 
 
 /*
- *  main.c
+ *  gnulda.c
  *  
  *
  *  @author Alexander Frotscher
+ *  @author Steve Hoffmann
  *  @institute FLI
  *  
  */

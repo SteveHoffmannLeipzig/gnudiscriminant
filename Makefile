@@ -6,7 +6,7 @@ SRC     := src
 INCLUDE := include
 
 LIBRARIES   := -L/usr/lib/x86_64-linux-gnu/ -lgsl -lgslcblas -lm -lgmp -L/usr/local/zlib/lib -lz
-EXECUTABLE  := main
+EXECUTABLE  := gnulda
 
 
 all: $(BIN)/$(EXECUTABLE)
