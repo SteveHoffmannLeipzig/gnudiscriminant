@@ -781,69 +781,111 @@ void printLDA(gsl_matrix *lda) {
 **********/
 void classification(gsl_matrix *t, gsl_vector_view *vectorviews, size_t *classnumber)
 {
-	FILE* pData;
-	FILE* pData2;
+  FILE* pData;
+  FILE* pData2;
+  FILE* pData3;
 
-	//open file
-	if ((pData = fopen("class.txt", "w+")) == NULL) {
-		fprintf(stderr, "cannot open result file \n");
-		exit(EXIT_FAILURE);
-	}
-	if ((pData2 = fopen("posterior.txt", "w+")) == NULL) {
-		fprintf(stderr, "cannot open result file \n");
-		exit(EXIT_FAILURE);
-	}
+  //open file
+  if ((pData = fopen("class.txt", "w+")) == NULL) {
+    fprintf(stderr, "cannot open result file \n");
+    exit(EXIT_FAILURE);
+  }
+  if ((pData2 = fopen("posterior.txt", "w+")) == NULL) {
+    fprintf(stderr, "cannot open result file \n");
+    exit(EXIT_FAILURE);
+  }
+ if ((pData3 = fopen("projection.txt", "w+")) == NULL) {
+    fprintf(stderr, "cannot open result file \n");
+    exit(EXIT_FAILURE);
+  }
 
-	double *result = (double *)malloc(*classnumber * t->size2 * sizeof(double));
-	if (result == NULL)
-	{
-		fprintf(stderr, "memory could not be given free\n");
-		exit(EXIT_FAILURE);
-	}
-	size_t index = 0;
-	for (size_t j = 0; j < t->size2; j++)
-	{
-		for (size_t i = 0; i < *classnumber; i++)
-		{
-			gsl_vector_view v = gsl_matrix_column(t, j);
-			gsl_vector *tmp = gsl_vector_alloc(t->size1);
-			gsl_vector_memcpy(tmp, (gsl_vector *)&v);
-			gsl_vector_sub(tmp, (gsl_vector *)&vectorviews[i]);
-			result[index] = 0.5 * sumofsq(tmp);
-			index++;
-			if (index % *classnumber == 0)
-			{
-				index--;
-				double scale = 0;
-				for (int k = 0; k < *classnumber; k++)
-				{
-					result[index - k] = exp(-result[index - k]);
-					scale += result[index - k];
-				}
-				scale = 1 / scale;
-				double cl = 0;
-				int ck = 0;
-				for (int k = *classnumber - 1; k >= 0; k--)
-				{
-					result[index - k] = result[index - k] * scale;
-					if (cl < result[index - k]) {
-						cl = result[index - k];
-						ck = (i-k)+1;
-					}
-					fprintf(pData2,"Probability of sample %zu to be in class %zu = %.17g\n", j, (i - k) + 1, result[index - k]);
-				}
-				fprintf(pData,"%d",ck);
-				fputc('\t', pData);
-				fputc('\n',pData2);
-				index++;
-			}
-	    
-        
-            gsl_vector_free(tmp);	
+
+  double *result = (double *)malloc(*classnumber * t->size2 * sizeof(double));
+  if (result == NULL)
+  {
+    fprintf(stderr, "memory could not be given free\n");
+    exit(EXIT_FAILURE);
+  }
+  size_t index = 0;
+
+  //iter samples
+  for (size_t j = 0; j < t->size2; j++) {
+    
+    //iter classes
+    for (size_t i = 0; i < *classnumber; i++) {
+
+      gsl_vector_view v = gsl_matrix_column(t, j);
+      gsl_vector *tmp = gsl_vector_alloc(t->size1);
+      gsl_vector_memcpy(tmp, (gsl_vector *)&v);
+      gsl_vector_sub(tmp, (gsl_vector *)&vectorviews[i]);
+      result[index] = 0.5 * sumofsq(tmp);
+      index++;
+      
+      //all class calculation for a sample completed
+      if (index % *classnumber == 0) {
+        index--;
+        double scale = 0;
+
+        for (int k = 0; k < *classnumber; k++) {
+          result[index - k] = exp(-result[index - k]);
+          scale += result[index - k];
         }
-	}
-	printf("Success.\n");
-    free(result);
+        scale = 1 / scale;
+        double cl = 0;
+        int ck = 0;
+        
+        for (int k = *classnumber - 1; k >= 0; k--) {
+          result[index - k] = result[index - k] * scale;
+          if (cl < result[index - k]) {
+            cl = result[index - k];
+            ck = (i-k)+1;
+          }
+          //fprintf(pData2,"Probability of sample %zu to be in class %zu = %.17g\n", j, (i - k) + 1, result[index - k]);
+          if(k < *classnumber-1) {
+            fprintf(pData2, "\t");
+          }
+          fprintf(pData2,"%.17g", result[index - k]);
+        }
+
+        fprintf(pData,"%d",ck);
+        fputc('\t', pData);
+        fputc('\n',pData2);
+        index++;
+      }
+
+
+      gsl_vector_free(tmp);	
+    }
+  }
+  fclose(pData);
+  fclose(pData2);
+
+  //header for transposed projection
+  for (size_t i = 0; i < t->size1; i++) {
+    if(i > 0) {
+        fprintf(pData3, "\t");
+    }
+    fprintf(pData3, "LD%ld", i);
+  }
+  fprintf(pData3, "\n");
+
+  //iter transposed projection
+  for (size_t j = 0; j < t->size2; j++) {
+    for (size_t i = 0; i < t->size1; i++) {
+      if(i > 0) {
+        fprintf(pData3, "\t");
+      }
+      fprintf(pData3, "%.17g", gsl_matrix_get(t, i, j));
+    }
+    fprintf(pData3, "\n");
+  }
+
+
+
+  fclose(pData3);
+
+  printf("Success.\n");
+  free(result);
 }
 
 double sumofsq(gsl_vector *v)
